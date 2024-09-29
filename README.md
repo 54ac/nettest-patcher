@@ -6,4 +6,4 @@ This is a small C program which patches hl.exe from the [Half-Life Net Test 2 be
 
 ### How do I compile this myself?
 
-I used TCC (Tiny C) to compile this program, i.e. `tcc nettest-patcher.c`.
+I used TCC (Tiny C) to compile this program, i.e. `tcc nettest-patcher.c`. By modifying the filenames, file size, and patches (location, old byte, new byte), you can use this code to create a patcher for any file you'd like.

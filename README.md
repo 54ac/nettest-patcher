@@ -2,8 +2,12 @@
 
 ### What is this?
 
-This is a small C program which patches hl.exe from the [Half-Life Net Test 2 beta](https://archive.org/details/nettest-2) to remove the CD check and timebomb. Writes the patched file to hlpatch.exe.
+This is a small C program that patches Half-Life Net Test betas to remove the CD check and timebomb.
 
 ### How do I compile this myself?
 
-I used TCC (Tiny C) to compile this program, i.e. `tcc nettest-patcher.c`. By modifying the filenames, file size, and patches (location, old byte, new byte), you can use this code to create a patcher for any file you'd like.
+I used TCC (Tiny C) to compile this program with the command `tcc -m32 nettest-patcher.c` (for compatibility with the 32-bit systems of the time).
+
+### How do I use this?
+
+Put `nettest-patcher.exe` in the same folder as `hl.exe` and run it. The original file is saved as `hl.old`.

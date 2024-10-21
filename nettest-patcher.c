@@ -1,97 +1,121 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-#define INPUT_FILE "hl.exe"
-#define OUTPUT_FILE "hlpatch.exe"
-#define FILE_SIZE 1191936
+#define INPUT_FILENAME "hl"
+#define MAX_FILE_SIZE 2000000
 
 typedef struct
 {
-    long location;
+    char *name;
+    int filesize;
+    int checksum;
+    int offset;
     unsigned char oldByte;
     unsigned char newByte;
 } Patch;
 
-Patch patches[] = {
-    {271776, 0x81, 0xC3}, // CD check
-    {277199, 0x22, 0x6B}  // timebomb
-};
+const Patch patches[] = {
+    {"Half-Life Beta 9 Net Test 1 - timebomb", 1171456, 103791551, 269647, 0x22, 0x6B},
+    {"Half-Life Beta 12 Net Test 2 - CD check", 1191936, 105952782, 271776, 0x81, 0xC3},
+    {"Half-Life Beta 12 Net Test 2 - timebomb", 1191936, 105952782, 277199, 0x22, 0x6B}};
 
-void handle_error(const char *message)
+void exitPrompt()
 {
-    fprintf(stderr, "Error: %s", message);
+    printf("Press any key to exit");
     getchar();
+}
+
+void handleError(FILE *file, unsigned char *buffer, const char *message)
+{
+    if (file)
+        fclose(file);
+    if (buffer)
+        free(buffer);
+    fprintf(stderr, "Error: %s\n", message);
+    exitPrompt();
     exit(EXIT_FAILURE);
-}
-
-FILE *open_file(const char *filename, const char *mode)
-{
-    FILE *file = fopen(filename, mode);
-    if (!file)
-    {
-        handle_error("Could not open file");
-    }
-    return file;
-}
-
-void replace_byte(unsigned char *buffer, Patch patch)
-{
-    if (buffer[patch.location] != patch.oldByte)
-    {
-        handle_error("Wrong byte");
-    }
-    buffer[patch.location] = patch.newByte;
 }
 
 int main()
 {
-    printf("Half-Life Net Test 2 beta timebomb & CD check patcher\n");
-    printf("https://github.com/54ac/nettest-patcher\n");
-    printf("=====================================================\n\n");
+    printf("Half-Life Net Test Beta patcher\n"
+           "https://github.com/54ac/nettest-patcher\n"
+           "=======================================\n\n");
 
-    // read file, check filesize
-    FILE *inputFile = open_file(INPUT_FILE, "rb");
+    const char *oldFileName = INPUT_FILENAME ".old";
+    FILE *fileCheck = fopen(oldFileName, "r");
+    if (fileCheck)
+        handleError(fileCheck, NULL, "Backup file already exists");
+
+    const char *inputFileName = INPUT_FILENAME ".exe";
+    FILE *inputFile = fopen(inputFileName, "rb");
+    if (!inputFile)
+        handleError(NULL, NULL, "Input file could not be opened");
+
     fseek(inputFile, 0, SEEK_END);
-    int fileSize = ftell(inputFile);
-    if (fileSize != FILE_SIZE)
-    {
-        handle_error("Wrong file size");
-    }
+    const size_t filesize = ftell(inputFile);
+    if (filesize > MAX_FILE_SIZE)
+        handleError(inputFile, NULL, "File too large");
 
-    // read file into memory
-    fseek(inputFile, 0, SEEK_SET);
-    unsigned char *buffer = malloc(fileSize);
+    rewind(inputFile);
+
+    unsigned char *buffer = malloc(filesize);
     if (!buffer)
-    {
-        handle_error("Memory allocation failed");
-    }
-    fread(buffer, 1, fileSize, inputFile);
+        handleError(inputFile, NULL, "Memory allocation failed");
+
+    if (fread(buffer, 1, filesize, inputFile) != filesize)
+        handleError(inputFile, buffer, "File read error");
+
     fclose(inputFile);
 
-    // check if already patched before replacing bytes
-    int alreadyPatched = 1;
-    int numPatches = sizeof(patches) / sizeof(Patch);
-    for (int i = 0; i < numPatches; i++)
+    int fileChecksum = 0;
+    for (int i = 0; i < filesize; i++)
+        fileChecksum += buffer[i];
+
+    // printf("File checksum: %d\n", fileChecksum);
+
+    bool validFile = false;
+    bool alreadyApplied = true;
+
+    for (const Patch *p = patches; p < patches + sizeof(patches) / sizeof(Patch); p++)
     {
-        if (buffer[patches[i].location] != patches[i].newByte)
+        if (filesize == p->filesize && fileChecksum == p->checksum)
         {
-            alreadyPatched = 0;
-            replace_byte(buffer, patches[i]);
+            validFile = true;
+
+            if (buffer[p->offset] == p->oldByte)
+            {
+                buffer[p->offset] = p->newByte;
+                alreadyApplied = false;
+                printf("%s patch applied\n", p->name);
+            }
+            else if (buffer[p->offset] == p->newByte)
+                printf("%s patch already applied\n", p->name);
+            else
+                validFile = false;
         }
     }
-    if (alreadyPatched)
-    {
-        handle_error("File already patched");
-    }
 
-    // write patched file
-    FILE *outputFile = open_file(OUTPUT_FILE, "wb");
-    fwrite(buffer, 1, fileSize, outputFile);
+    if (!validFile)
+        handleError(NULL, buffer, "Unknown version");
+    if (alreadyApplied)
+        handleError(NULL, buffer, "File already patched");
+
+    if (rename(inputFileName, oldFileName) != 0)
+        handleError(NULL, buffer, "Can't rename original file");
+
+    FILE *outputFile = fopen(inputFileName, "wb");
+    if (!outputFile)
+        handleError(NULL, buffer, "Output file could not be opened");
+
+    if (fwrite(buffer, 1, filesize, outputFile) != filesize)
+        handleError(outputFile, buffer, "File write error");
+
     fclose(outputFile);
     free(buffer);
 
-    printf("File patched successfully\n");
-    printf("Output written to %s", OUTPUT_FILE);
-    getchar();
+    printf("\nFile patched successfully, original file saved as %s\n", oldFileName);
+    exitPrompt();
     return EXIT_SUCCESS;
 }

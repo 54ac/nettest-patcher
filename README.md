@@ -2,7 +2,7 @@
 
 ### What is this?
 
-This is a small C program that patches Half-Life Net Test betas to remove the CD check and timebomb.
+This is a small C program that patches Half-Life Net Test betas to remove the CD check and timebomb. The patches were found using x64dbg.
 
 ### How do I compile this myself?
 

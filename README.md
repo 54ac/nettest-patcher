@@ -20,5 +20,5 @@ This program was compiled using TCC (Tiny C Compiler) as a 32-bit application wi
 ### Additional notes
 
 - This patcher only works with early versions of Half-Life, from the Net Test betas through all retail versions up to 1.1.0.1, after which the CD check was removed.
-- The CD key check is not affected; the aim of the tool is to allow owners of the game to experience early versions of Half-Life without having to keep old CDs or optical drives.
+- The CD key check is not affected; the aim of the tool is to allow owners of the game to experience early versions of Half-Life without having to keep old CDs, ISOs, or optical drives.
 - These versions of the game use CD audio to play music, so if you don't own the original CD, you won't hear any music. But if you do own an optical drive, the game will play audio tracks from any mixed mode/audio CD at the appropriate cues.

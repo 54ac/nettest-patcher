@@ -10,7 +10,7 @@ Place `hl-cd-patcher.exe` in the same folder as `hl.exe` and run it. The origina
 
 ### How does this work?
 
-- The boolean result of the CD check function is evaluated with a `jnz` instruction. By changing the instruction to `jmp` (or `jns` in versions where a far jump is required, to keep the patch within one byte), the game always treats the check as successful.
+- The boolean result of the CD check function is evaluated with a `jnz` instruction. By changing the instruction to `jmp` (or `jns` in versions where a far jump is required, to keep the patch within one byte), the game always treats the check as successful. This approach differs from e.g. the warez release by CLASS, where the function is instead modified to always return true, altering several bytes in the executable.
 - The timebomb check is simply jumped over.
 
 ### How do I compile this myself?
